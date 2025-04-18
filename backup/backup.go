@@ -356,14 +356,18 @@ type Backup struct {
 // Enumerate lists the available backups
 func Enumerate() ([]Backup, error) {
 	var all []Backup
-	var home string
-	var dir string
+	var execPath, dir string
+
+	execPath, err := os.Executable()
+	if err != nil {
+		return nil, err
+	}
+	baseDir := filepath.Dir(execPath)
+
 	if runtime.GOOS == "windows" {
-		home = os.Getenv("APPDATA")
-		dir = path.Join(home, "Apple Computer\\MobileSync\\Backup")
+		dir = filepath.Join(baseDir, "\\Backup")
 	} else {
-		home = os.Getenv("HOME")
-		dir = path.Join(home, "Library/Application Support/MobileSync/Backup")
+		dir = filepath.Join(baseDir, "/Backup")
 	}
 	r, err := os.Open(dir)
 	if err != nil {
@@ -389,17 +393,20 @@ func Enumerate() ([]Backup, error) {
 
 	return all, nil
 }
-
 // Open opens a MobileBackup directory corresponding to a given guid.
 func Open(guid string) (*MobileBackup, error) {
 	var backup MobileBackup
-	var home string
+
+	execPath, err := os.Executable()
+	if err != nil {
+		return nil, err
+	}
+	baseDir := filepath.Dir(execPath)
+
 	if runtime.GOOS == "windows" {
-		home = os.Getenv("APPDATA")
-		backup.Dir = path.Join(home, "Apple Computer\\MobileSync\\Backup", guid)
+		backup.Dir = filepath.Join(baseDir, "\\Backup", guid)
 	} else {
-		home = os.Getenv("HOME")
-		backup.Dir = path.Join(home, "Library/Application Support/MobileSync/Backup", guid)
+		backup.Dir = filepath.Join(baseDir, "/Backup", guid)
 	}
 
 	tmp := path.Join(backup.Dir, "Manifest.plist")
